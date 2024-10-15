@@ -41,7 +41,7 @@ func NewDefaultRotateConfig() *RotateConfig {
 		MaxMegabytes: 100,
 		MaxDays:      0,
 		MaxBackups:   10,
-		LocalTime:    false,
+		LocalTime:    true,
 	}
 }
 
