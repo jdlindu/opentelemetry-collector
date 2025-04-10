@@ -4,6 +4,7 @@
 package telemetry // import "go.opentelemetry.io/collector/service/telemetry"
 
 import (
+	"github.com/google/uuid"
 	"go.opentelemetry.io/contrib/bridges/otelzap"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/log"
@@ -34,6 +35,20 @@ func newLogger(set Settings, cfg Config) (*zap.Logger, log.LoggerProvider, error
 	if zapCfg.Encoding == "console" {
 		// Human-readable timestamps for console format of logs.
 		zapCfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	}
+
+	rotationSchema := "rotation-" + uuid.NewString()
+	err := zap.RegisterSink(rotationSchema, getRotationSinkFactory(NewDefaultRotateConfig()))
+	if err != nil {
+		return nil, nil, err
+	}
+	zapCfg.OutputPaths, err = setRotationURL(zapCfg.OutputPaths, rotationSchema)
+	if err != nil {
+		return nil, nil, err
+	}
+	zapCfg.ErrorOutputPaths, err = setRotationURL(zapCfg.ErrorOutputPaths, rotationSchema)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	logger, err := zapCfg.Build(set.ZapOptions...)
